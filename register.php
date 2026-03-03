@@ -12,43 +12,37 @@ $username_err = $password_err = $confirm_password_err = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 	// Check if username is empty
-	if (empty(trim($_POST['username']))) {
+	$raw_username = isset($_POST['username']) ? $_POST['username'] : null;
+	if (empty(trim($raw_username))) {
 		$username_err = "Please enter a username.";
-
-		// Check if username already exist
 	} else {
+		$param_username = sanitize_input($raw_username);
 
-		// Prepare a select statement
-		$sql = 'SELECT id FROM users WHERE username = ?';
-
-		if ($stmt = $mysql_db->prepare($sql)) {
-			// Set parmater
-			$param_username = trim($_POST['username']);
-
-			// Bind param variable to prepares statement
-			$stmt->bind_param('s', $param_username);
-
-			// Attempt to execute statement
-			if ($stmt->execute()) {
-
-				// Store executed result
-				$stmt->store_result();
-
-				if ($stmt->num_rows == 1) {
-					$username_err = 'This username is already taken.';
-				} else {
-					$username = trim($_POST['username']);
-				}
-			} else {
-				echo "Oops! ${$username}, something went wrong. Please try again later.";
-			}
-
-			// Close statement
-			$stmt->close();
+		// Basic username format validation (alphanumeric + underscore, 3-50 chars)
+		if (!is_safe_input($param_username) || !preg_match('/^[A-Za-z0-9_]{3,50}$/', $param_username)) {
+			$username_err = 'Invalid username format.';
 		} else {
+			// Use transaction to avoid race conditions when checking/inserting
+			try {
+				$pdo->beginTransaction();
 
-			// Close db connction
-			$mysql_db->close();
+				// Lock the row if exists to prevent race conditions
+				$sql = 'SELECT id FROM users WHERE username = ? FOR UPDATE';
+				$stmt = $pdo->prepare($sql);
+				$stmt->execute([$param_username]);
+
+				if ($stmt->rowCount() == 1) {
+					$username_err = 'This username is already taken.';
+					// Leave transaction open for rollback later when needed
+				} else {
+					$username = $param_username;
+				}
+			} catch (Exception $e) {
+				if ($pdo->inTransaction()) {
+					$pdo->rollBack();
+				}
+				$username_err = 'Something went wrong. Please try again later.';
+			}
 		}
 	}
 
@@ -72,36 +66,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	}
 
 	// Check input error before inserting into database
-
-	if (empty($username_err) && empty($password_err) && empty($confirm_err)) {
-
-		// Prepare insert statement
-		$sql = 'INSERT INTO users (username, password) VALUES (?,?)';
-
-		if ($stmt = $mysql_db->prepare($sql)) {
-
-			// Set parmater
-			$param_username = $username;
-			$param_password = password_hash($password, PASSWORD_DEFAULT); // Created a password
-
-			// Bind param variable to prepares statement
-			$stmt->bind_param('ss', $param_username, $param_password);
-
-			// Attempt to execute
-			if ($stmt->execute()) {
-				// Redirect to login page
-				header('location: ./login.php');
-				// echo "Will  redirect to login page";
-			} else {
-				echo "Something went wrong. Try signing in again.";
+	if (empty($username_err) && empty($password_err) && empty($confirm_password_err)) {
+		try {
+			// Ensure transaction started earlier during username check; if not, start one
+			if (!$pdo->inTransaction()) {
+				$pdo->beginTransaction();
 			}
 
-			// Close statement
-			$stmt->close();
-		}
+			// Prepare insert statement
+			$sql = 'INSERT INTO users (username, password) VALUES (?,?)';
+			$stmt = $pdo->prepare($sql);
 
-		// Close connection
-		$mysql_db->close();
+			// Set parameters
+			$param_password = password_hash($password, PASSWORD_DEFAULT);
+
+			// Attempt to execute
+			if ($stmt->execute([$username, $param_password])) {
+				$pdo->commit();
+				header('location: ./login.php');
+				exit;
+			} else {
+				// Execution failed
+				$pdo->rollBack();
+				echo "Something went wrong. Try signing in again.";
+			}
+		} catch (Exception $e) {
+			if ($pdo->inTransaction()) {
+				$pdo->rollBack();
+			}
+			echo "Something went wrong. Try signing in again.";
+		}
+	} else {
+		// Validation failed — rollback any open transaction from username check
+		if ($pdo->inTransaction()) {
+			$pdo->rollBack();
+		}
 	}
 }
 ?>

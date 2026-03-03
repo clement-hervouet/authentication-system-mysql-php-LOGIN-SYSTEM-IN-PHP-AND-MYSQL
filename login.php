@@ -22,7 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (empty(trim($_POST['username']))) {
     $username_err = 'Please enter username.';
   } else {
-    $username = trim($_POST['username']);
+    $raw_username = $_POST['username'];
+    $username = sanitize_input($raw_username);
+
+    if (!is_safe_input($username) || !preg_match('/^[A-Za-z0-9_]{3,50}$/', $username)) {
+      $username_err = 'Invalid username format.';
+    }
   }
 
   // Check if password is empty
@@ -34,58 +39,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Validate credentials
   if (empty($username_err) && empty($password_err)) {
-    // Prepare a select statement
+    // Prepare a select statement using PDO
     $sql = 'SELECT id, username, password FROM users WHERE username = ?';
+    $stmt = $pdo->prepare($sql);
+    if ($stmt->execute([$username])) {
+      $row = $stmt->fetch();
+      if ($row) {
+        $id = $row['id'];
+        $username = $row['username'];
+        $hashed_password = $row['password'];
 
-    if ($stmt = $mysql_db->prepare($sql)) {
+        if (password_verify($password, $hashed_password)) {
+          // Store data in session
+          $_SESSION['loggedin'] = true;
+          $_SESSION['id'] = $id;
+          $_SESSION['username'] = $username;
 
-      // Set parmater
-      $param_username = $username;
-
-      // Bind param to statement
-      $stmt->bind_param('s', $param_username);
-
-      // Attempt to execute
-      if ($stmt->execute()) {
-
-        // Store result
-        $stmt->store_result();
-
-        // Check if username exists. Verify user exists then verify
-        if ($stmt->num_rows == 1) {
-          // Bind result into variables
-          $stmt->bind_result($id, $username, $hashed_password);
-
-          if ($stmt->fetch()) {
-            if (password_verify($password, $hashed_password)) {
-
-              // Start a new session
-              session_start();
-
-              // Store data in sessions
-              $_SESSION['loggedin'] = true;
-              $_SESSION['id'] = $id;
-              $_SESSION['username'] = $username;
-
-              // Redirect to user to page
-              header('location: welcome.php');
-            } else {
-              // Display an error for passord mismatch
-              $password_err = 'Invalid password';
-            }
-          }
+          // Redirect to user page
+          header('location: welcome.php');
+          exit;
         } else {
-          $username_err = "Username does not exists.";
+          // Display an error for password mismatch
+          $password_err = 'Invalid password';
         }
       } else {
-        echo "Oops! Something went wrong please try again";
+        $username_err = "Username does not exists.";
       }
-      // Close statement
-      $stmt->close();
+    } else {
+      echo "Oops! Something went wrong please try again";
     }
-
-    // Close connection
-    $mysql_db->close();
   }
 }
 ?>

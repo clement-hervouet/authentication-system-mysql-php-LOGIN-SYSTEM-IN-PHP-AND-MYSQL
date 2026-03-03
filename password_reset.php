@@ -39,34 +39,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Check input errors before updating the database
     if (empty($new_password_err) && empty($confirm_password_err)) {
-        // Prepare an update statement
-        $sql = 'UPDATE users SET password = ? WHERE id = ?';
+        try {
+            // Basic safety: ensure session id is numeric
+            $param_id = isset($_SESSION['id']) ? (int)$_SESSION['id'] : 0;
 
-        if ($stmt = $mysql_db->prepare($sql)) {
+            if ($param_id <= 0) {
+                throw new Exception('Invalid user id.');
+            }
+
+            $pdo->beginTransaction();
+
+            // Prepare an update statement using PDO
+            $sql = 'UPDATE users SET password = ? WHERE id = ?';
+            $stmt = $pdo->prepare($sql);
+
             // Set parameters
             $param_password = password_hash($new_password, PASSWORD_DEFAULT);
-            $param_id = $_SESSION["id"];
-
-            // Bind variables to the prepared statement as parameters
-            $stmt->bind_param("si", $param_password, $param_id);
-
 
             // Attempt to execute the prepared statement
-            if ($stmt->execute()) {
+            if ($stmt->execute([$param_password, $param_id])) {
+                $pdo->commit();
                 // Password updated successfully. Destroy the session, and redirect to login page
                 session_destroy();
                 header("location: login.php");
                 exit();
             } else {
+                $pdo->rollBack();
                 echo "Oops! Something went wrong. Please try again later.";
             }
-
-            // Close statement
-            $stmt->close();
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            echo "Oops! Something went wrong. Please try again later.";
         }
-
-        // Close connection
-        $mysql_db->close();
     }
 }
 ?>

@@ -5,12 +5,52 @@ define('DB_SERVER', 'localhost');
 define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_NAME', 'demo');
- 
-/* Attempt to connect to MySQL database */
-$link = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
- 
-// Check connection
-if($link === false){
-    die("ERROR: Could not connect. " . mysqli_connect_error());
+
+/* Attempt to connect to MySQL database using PDO */
+try {
+    $dsn = 'mysql:host=' . DB_SERVER . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+    $pdo = new PDO(
+        $dsn,
+        DB_USERNAME,
+        DB_PASSWORD,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
+} catch (PDOException $e) {
+    die('ERROR: Could not connect. ' . $e->getMessage());
 }
-?>
+
+/*
+ * Basic input safety helpers
+ * - sanitize_input: trims input
+ * - is_safe_input: rejects obvious SQL injection tokens/patterns
+ * Note: PDO prepared statements already protect against SQL injection;
+ * these helpers are an additional layer to detect suspicious input.
+ */
+function sanitize_input($data)
+{
+    return trim($data);
+}
+
+function is_safe_input($input)
+{
+    if ($input === null) {
+        return false;
+    }
+
+    $s = strtolower($input);
+
+    // Reject inputs that contain SQL control characters or keywords
+    $blacklist = ["--", ";", "/*", "*/", "select ", "insert ", "update ", "delete ", "drop ", "truncate ", "union ", "xp_"];
+
+    foreach ($blacklist as $token) {
+        if (strpos($s, $token) !== false) {
+            return false;
+        }
+    }
+
+    return true;
+}
