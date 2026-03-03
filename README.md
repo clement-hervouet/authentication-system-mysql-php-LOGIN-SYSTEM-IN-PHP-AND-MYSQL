@@ -1,3 +1,6 @@
+#Repo forked to update it using PDO instead of MySQLi, for a more secure version
+Still in developement
+
 # LOGIN SYSTEM IN PHP AND MYSQL: User Authentication system.
 
 ###### VERSION 1.0.0
