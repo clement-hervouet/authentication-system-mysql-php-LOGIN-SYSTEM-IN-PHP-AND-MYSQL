@@ -1,10 +1,10 @@
 <?php
 /* Database credentials. Assuming you are running MySQL
-server with user.sql setting (user 'your-user' with 'your-passwd' password) */
+server with user.sql setting (with 'your-passwd' password) */
 define('DB_SERVER', 'localhost');
-define('DB_USERNAME', 'your-user');
-define('DB_PASSWORD', 'your-passwd');
-define('DB_NAME', 'users_base');
+define('DB_USERNAME', 'app.login');
+define('DB_PASSWORD', 'your_passwd');
+define('DB_NAME', 'your_database');
 
 /* Attempt to connect to MySQL database using PDO */
 try {

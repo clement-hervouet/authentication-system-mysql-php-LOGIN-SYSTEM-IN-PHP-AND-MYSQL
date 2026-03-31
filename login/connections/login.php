@@ -4,12 +4,12 @@ session_start();
 
 // Check if the user is already logged in, if yes then redirect him to welcome page
 if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
-  header("location: welcome.php");
+  header("location: ../../index.php");
   exit;
 }
 
 // Include config file
-require_once "config/config.php";
+require_once "../config/config.php";
 
 // Define variables and initialize with empty values
 $username = $password = '';
@@ -40,23 +40,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Validate credentials
   if (empty($username_err) && empty($password_err)) {
     // Prepare a select statement using PDO
-    $sql = 'SELECT id, username, password FROM users WHERE username = ?';
+    $sql = 'SELECT id_user, username, lastname, firstname, password FROM users WHERE username = ?';
     $stmt = $pdo->prepare($sql);
     if ($stmt->execute([$username])) {
       $row = $stmt->fetch();
       if ($row) {
-        $id = $row['id'];
+        $id_user = $row['id_user'];
         $username = $row['username'];
         $hashed_password = $row['password'];
+        $lastname = $row['lastname'];
+        $firstname = $row['firstname'];
 
         if (password_verify($password, $hashed_password)) {
+          session_regenerate_id(true);
+          
           // Store data in session
           $_SESSION['loggedin'] = true;
-          $_SESSION['id'] = $id;
+          $_SESSION['id_user'] = $id_user;
           $_SESSION['username'] = $username;
+          $_SESSION['lastname'] = $lastname;
+          $_SESSION['firstname'] = $firstname;
 
           // Redirect to user page
-          header('location: welcome.php');
+          header('location: ../../index.php');
           exit;
         } else {
           // Display an error for password mismatch
@@ -76,29 +82,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <head>
   <meta charset="UTF-8">
-  <title>Sign in</title>
+  <title>Login</title>
   <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.4.1/cosmo/bootstrap.min.css" rel="stylesheet" integrity="sha384-qdQEsAI45WFCO5QwXBelBe1rR9Nwiss4rGEqiszC+9olH1ScrLrMQr1KmDR964uZ" crossorigin="anonymous">
-  <style>
-    .wrapper {
-      width: 500px;
-      padding: 20px;
-    }
-
-    .wrapper h2 {
-      text-align: center
-    }
-
-    .wrapper form .form-group span {
-      color: red;
-    }
-  </style>
+  <link rel="stylesheet" href="assets/static/css/style.css">
+  
 </head>
 
 <body>
   <main>
     <section class="container wrapper">
       <h2 class="display-4 pt-3">Login</h2>
-      <p class="text-center">Please fill in your credentials.</p>
+      <p class="text-center">Fill this form to connect.</p>
       <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
         <div class="form-group <?php (!empty($username_err)) ? 'has_error' : ''; ?>">
           <label for="username">Username</label>
@@ -113,9 +107,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="form-group">
-          <input type="submit" class="btn btn-block btn-outline-primary" value="login">
+          <input type="submit" class="btn btn-block btn-outline-primary" value="Login">
         </div>
-        <p>Don't have an account? <a href="register.php">Sign in</a>.</p>
+        <p>Don't have an account? <a href="../register.php">Register</a>.</p>
       </form>
     </section>
   </main>
