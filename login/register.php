@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 			// Attempt to execute
 			if ($stmt->execute([$username, $param_password, $lastname, $firstname])) {
 				$pdo->commit();
-				header('location: ../login.php');
+				header('location: connections/login.php');
 				exit;
 			} else {
 				// Execution failed

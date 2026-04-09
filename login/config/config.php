@@ -4,7 +4,7 @@ server with user.sql setting (with 'your-passwd' password) */
 define('DB_SERVER', 'localhost');
 define('DB_USERNAME', 'app.login');
 define('DB_PASSWORD', 'your_passwd');
-define('DB_NAME', 'your_database');
+define('DB_NAME', 'test');
 
 /* Attempt to connect to MySQL database using PDO */
 try {

@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($new_password_err) && empty($confirm_password_err)) {
         try {
             // Basic safety: ensure session id is numeric
-            $param_id = isset($_SESSION['id']) ? (int)$_SESSION['id'] : 0;
+            $param_id = isset($_SESSION['id_user']) ? (int)$_SESSION['id_user'] : 0;
 
             if ($param_id <= 0) {
                 throw new Exception('Invalid user id.');
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $pdo->commit();
                 // Password updated successfully. Destroy the session, and redirect to login page
                 session_destroy();
-                header("location: ../login.php");
+                header("location: connections/login.php");
                 exit();
             } else {
                 $pdo->rollBack();
