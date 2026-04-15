@@ -9,5 +9,5 @@ CREATE TABLE users (
     lastname        VARCHAR(50)     NOT NULL,
     password        VARCHAR(255)    NOT NULL,
     created_at      DATETIME        DEFAULT     CURRENT_TIMESTAMP,
-    status          ENUM            ('admin','guest','editor') DEFAULT 'guest'  --still not in use today
+    status          ENUM            ('admin','guest','editor') DEFAULT 'guest'  -- still not in use today
 );
