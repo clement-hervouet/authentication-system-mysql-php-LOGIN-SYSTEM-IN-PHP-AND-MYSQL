@@ -84,14 +84,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="UTF-8">
   <title>Login</title>
   <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.4.1/cosmo/bootstrap.min.css" rel="stylesheet" integrity="sha384-qdQEsAI45WFCO5QwXBelBe1rR9Nwiss4rGEqiszC+9olH1ScrLrMQr1KmDR964uZ" crossorigin="anonymous">
-  <link rel="stylesheet" href="assets/static/css/style.css">
+  <link rel="stylesheet" href="../../assets/static/css/style.css">
   
 </head>
 
 <body>
   <main>
     <section class="container wrapper">
-      <h2 class="display-4 pt-3">Login</h2>
+      <div class="login-header">
+        <img src="logo.png" alt="Logo" class="logo">
+        <h2 class="display-4 pt-3">Login</h2>
+      </div>
       <p class="text-center">Fill this form to connect.</p>
       <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
         <div class="form-group <?php (!empty($username_err)) ? 'has_error' : ''; ?>">
