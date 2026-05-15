@@ -46,7 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if ($param_id <= 0) {
                 throw new Exception('Invalid user id.');
             }
-
+            
+            $pdo = get_pdo('login');
             $pdo->beginTransaction();
 
             // Prepare an update statement using PDO
@@ -66,14 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             } else {
                 $pdo->rollBack();
                 echo "Oops! Something went wrong. Please try again later.";
-                echo $e->getMessage();
             }
         } catch (Exception $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             echo "Oops! Something went wrong. Please try again later.";
-                echo $e->getMessage();
         }
     }
 }

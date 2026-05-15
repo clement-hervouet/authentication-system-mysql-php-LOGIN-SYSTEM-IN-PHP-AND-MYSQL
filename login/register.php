@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		} else {
 			// Use transaction to avoid race conditions when checking/inserting
 			try {
+				$pdo = get_pdo('login');
 				$pdo->beginTransaction();
 
 				// Lock the row if exists to prevent race conditions

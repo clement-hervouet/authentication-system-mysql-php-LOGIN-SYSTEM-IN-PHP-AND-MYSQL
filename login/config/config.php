@@ -1,26 +1,28 @@
 <?php
 /* Database credentials. Assuming you are running MySQL
 server with user.sql setting (with 'your-passwd' password) */
-define('DB_SERVER', 'localhost');
-define('DB_USERNAME', 'app.login');
-define('DB_PASSWORD', 'your_passwd');
-define('DB_NAME', 'test');
+define('DB_SERVER', 'your-server');
+define('DB_NAME', 'your-database');
 
-/* Attempt to connect to MySQL database using PDO */
-try {
-    $dsn = 'mysql:host=' . DB_SERVER . ';dbname=' . DB_NAME . ';charset=utf8mb4';
-    $pdo = new PDO(
-        $dsn,
-        DB_USERNAME,
-        DB_PASSWORD,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+function get_pdo(string $account): PDO {
+    if ($account === 'login') {
+        $username = 'app.login';
+        $password = 'your-app.login-passwwd';
+    } else {
+        $username = 'app.your-user';
+        $password = 'your-app.your-user-passwwd';
+    }
+
+    try {
+        $dsn = 'mysql:host=' . DB_SERVER . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+        return new PDO($dsn, $username, $password, [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]
-    );
-} catch (PDOException $e) {
-    die('ERROR: Could not connect. ' . $e->getMessage());
+            PDO::ATTR_EMULATE_PREPARES   => false,
+        ]);
+    } catch (PDOException $e) {
+        die('ERROR: Could not connect. ' . $e->getMessage());
+    }
 }
 
 /*

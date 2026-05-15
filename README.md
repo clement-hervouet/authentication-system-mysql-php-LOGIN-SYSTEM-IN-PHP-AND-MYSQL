@@ -49,6 +49,15 @@ logged in user can reset password for registered account.
 script is in `login/password_reset.php`
 
 <hr />
+
+## SQL App connection
+
+### get_pdo()
+
+The funtion get_pdo() within the config file allow you for a pdo connection using another account then the login one, making your code for your application clearer.
+
+<hr />
+
 <small>Give this a project ⭐ if you found it useful, and follow me for more interesting future projects</small>
 
 <br>

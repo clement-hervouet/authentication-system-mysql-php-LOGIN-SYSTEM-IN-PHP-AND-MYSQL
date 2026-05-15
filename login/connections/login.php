@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (empty($username_err) && empty($password_err)) {
     // Prepare a select statement using PDO
     $sql = 'SELECT id_user, username, lastname, firstname, password FROM users WHERE username = ?';
+    $pdo = get_pdo('login');
     $stmt = $pdo->prepare($sql);
     if ($stmt->execute([$username])) {
       $row = $stmt->fetch();
